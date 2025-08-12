@@ -1,646 +1,590 @@
- = Enum.Font.FredokaOne
-	title.TextSize = 18
-	title.TextColor3 = Color3.fromRGB(255, 255, 255)
-	title.BackgroundTransparency = 1
-	title.Size = UDim2.new(1, 0, 0, 30)
-	title.Position = UDim2.new(0, 0, 0, 0)
-
-	local petInfo = Instance.new("TextLabel", frame)
-	petInfo.Text = "Equipped Pet: [None]"
-	petInfo.Font = Enum.Font.Gotham
-	petInfo.TextSize = 16
-	petInfo.TextColor3 = Color3.fromRGB(255, 255, 150)
-	petInfo.BackgroundTransparency = 1
-	petInfo.Position = UDim2.new(0, 0, 0, 30)
-	petInfo.Size = UDim2.new(1, 0, 0, 25)
-	petInfo.TextScaled = true
-	petInfo.TextWrapped = true
-
-	local function createStyledButton(text, yPos, color)
-		local btn = Instance.new("TextButton")
-		btn.Size = UDim2.new(0.9, 0, 0, 35)
-		btn.Position = UDim2.new(0.05, 0, 0, yPos)
-		btn.BackgroundColor3 = Color3.fromRGB(40, 43, 74)
-		btn.Text = text
-		btn.Font = Enum.Font.FredokaOne
-		btn.TextSize = 16
-		btn.TextColor3 = Color3.new(1, 1, 1)
-		btn.AutoButtonColor = false
-		Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
-		local stroke = Instance.new("UIStroke", btn)
-		stroke.Color = Color3.fromRGB(0, 0, 0)
-		stroke.Thickness = 1.2
-		btn.MouseEnter:Connect(function() btn.BackgroundColor3 = color:lerp(Color3.new(1,1,1), 0.2) end)
-		btn.MouseLeave:Connect(function() btn.BackgroundColor3 = color end)
-		btn.Parent = frame
-		return btn
-	end
-
-	local button = createStyledButton("Set Age to 50", 60, Color3.fromRGB(0, 170, 255))
-
-	local function getEquippedPetTool()
-		local character = player.Character
-		if not character then return nil end
-		for _, child in pairs(character:GetChildren()) do
-			if child:IsA("Tool") and child.Name:find("Age") then
-				return child
-			end
-		end
-		return nil
-	end
-
-	local function updateGUI()
-		local pet = getEquippedPetTool()
-		petInfo.Text = pet and ("Equipped Pet: " .. pet.Name) or "Equipped Pet: [None]"
-	end
-
-	button.MouseButton1Click:Connect(function()
-		local tool = getEquippedPetTool()
-		if tool then
-			button.Text = "Please wait..."
-			task.spawn(function()
-				for i = 20, 1, -1 do
-					button.Text = "Changing Age in " .. i .. "..."
-					task.wait(1)
-				end
-				local newName = tool.Name:gsub("%[Age%s%d+%]", "[Age 50]")
-				tool.Name = newName
-				updateGUI() -- Update text after name change
-				button.Text = "Set Age to 50"
-			end)
-		else
-			button.Text = "No Pet Equipped!"
-			task.wait(2)
-			button.Text = "Set Age to 50"
-		end
-	end)
-
-	-- This background loop will automatically stop when the GUI is destroyed.
-	local connection = game:GetService("RunService").Heartbeat:Connect(function(dt)
-		if not screenGui.Parent then
-			connection:Disconnect() -- Clean up the connection
-			return
-		end
-		updateGUI()
-	end)
-
-	return screenGui
-end
-
-
--- =================================================================--
--- == SCRIPT 2: Pet Mutation Finder                               ==--
--- =================================================================--
--- This function builds the Mutation Finder GUI and its dependencies.
-local function createPetMutationFinderGui()
-	local gui = Instance.new("ScreenGui")
-	gui.Name = "PetMutationFinder"
-	gui.ResetOnSpawn = false
-
-	local frame = Instance.new("Frame", gui)
-	frame.Size = UDim2.new(0, 220, 0, 185)
-	frame.Position = UDim2.new(0.4, 0, 0.4, 0)
-	frame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-	frame.BorderColor3 = Color3.fromRGB(100, 100, 100)
-	frame.BorderSizePixel = 2
-	frame.Active = true
-	frame.Draggable = true
-	Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 12)
-	Instance.new("UIStroke", frame).Color = Color3.fromRGB(120, 120, 120)
-
-	local title = Instance.new("TextLabel", frame)
-	title.Size = UDim2.new(1, 0, 0, 35)
-	title.Text = "🔬 Pet Mutation Finder"
-	title.TextColor3 = Color3.fromRGB(230, 230, 230)
-	title.BackgroundTransparency = 1
-	title.Font = Enum.Font.GothamBold
-	title.TextSize = 18
-
-	local function createButton(text, yPos, color)
-		local btn = Instance.new("TextButton")
-		btn.Size = UDim2.new(0.9, 0, 0, 35)
-		btn.Position = UDim2.new(0.05, 0, 0, yPos)
-		btn.BackgroundColor3 = color
-		btn.Text = text
-		btn.Font = Enum.Font.GothamMedium
-		btn.TextSize = 16
-		btn.TextColor3 = Color3.new(0.9, 0.9, 0.9)
-		btn.AutoButtonColor = false
-		Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
-		local stroke = Instance.new("UIStroke", btn)
-		stroke.Color = Color3.fromRGB(80, 80, 80)
-		stroke.Thickness = 1.2
-		btn.MouseEnter:Connect(function() TweenService:Create(btn, TweenInfo.new(0.2), { BackgroundColor3 = color:Lerp(Color3.new(0.7, 0.7, 0.7), 0.2) }):Play() end)
-		btn.MouseLeave:Connect(function() TweenService:Create(btn, TweenInfo.new(0.2), { BackgroundColor3 = color }):Play() end)
-		btn.Parent = frame
-		return btn
-	end
-
-	local reroll = createButton("☀️ roll Mutation ☀️", 45, Color3.fromRGB(100, 100, 100))
-	local toggle = createButton("☀️ Turn on/off ☀️", 90, Color3.fromRGB(120, 120, 120))
-
-	local credit = Instance.new("TextLabel", frame)
-	credit.Size = UDim2.new(1, 0, 0, 20)
-	credit.Position = UDim2.new(0, 0, 1, -20)
-	credit.Text = "Made by Jaradd"
-	credit.TextColor3 = Color3.fromRGB(180, 180, 180)
-	credit.BackgroundTransparency = 1
-	credit.Font = Enum.Font.Gotham
-	credit.TextSize = 13
-
-	local espGui -- Declare here to be accessed by cleanup
-	
-	local function findMachine()
-		for _, obj in pairs(Workspace:GetDescendants()) do
-			if obj:IsA("Model") and obj.Name:lower():find("mutation") then
-				return obj
-			end
-		end
-		return nil
-	end
-
-	local machine = findMachine()
-	if machine and machine:FindFirstChildWhichIsA("BasePart") then
-		local basePart = machine:FindFirstChildWhichIsA("BasePart")
-		local mutations = { "Shiny", "Inverted", "Frozen", "Windy", "Golden", "Mega", "Tiny", "Tranquil", "IronSkin", "Radiant", "Rainbow", "Shocked", "Ascended" }
-		local currentMutation = mutations[math.random(#mutations)]
-
-		espGui = Instance.new("BillboardGui", basePart)
-		espGui.Name = "MutationESP"
-		espGui.Adornee = basePart
-		espGui.Size = UDim2.new(0, 200, 0, 40)
-		espGui.StudsOffset = Vector3.new(0, 3, 0)
-		espGui.AlwaysOnTop = true
-
-		local espLabel = Instance.new("TextLabel", espGui)
-		espLabel.Size = UDim2.new(1, 0, 1, 0)
-		espLabel.BackgroundTransparency = 1
-		espLabel.Font = Enum.Font.GothamBold
-		espLabel.TextSize = 24
-		espLabel.TextStrokeTransparency = 0.3
-		espLabel.TextStrokeColor3 = Color3.fromRGB(40, 40, 40)
-		espLabel.Text = currentMutation
-		espLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
-		
-		toggle.MouseButton1Click:Connect(function() espGui.Enabled = not espGui.Enabled end)
-
-		reroll.MouseButton1Click:Connect(function()
-			reroll.Text = "⏳ Rerolling..."
-			task.spawn(function()
-				local duration, interval = 2, 0.1
-				for i = 1, math.floor(duration / interval) do
-					espLabel.Text = mutations[math.random(#mutations)]
-					task.wait(interval)
-				end
-				currentMutation = mutations[math.random(#mutations)]
-				espLabel.Text = currentMutation
-				reroll.Text = "🎲 Mutation Reroll"
-			end)
-		end)
-	else
-		warn("Pet Mutation Machine not found. ESP functionality disabled.")
-		reroll.Text = "Machine Not Found"
-		toggle.Text = "ESP Disabled"
-	end
-
-	gui.Destroying:Connect(function()
-		if espGui then
-			espGui:Destroy()
-		end
-	end)
-
-	return gui
-end
-
-
--- =================================================================--
--- == MAIN LIBRARY HUB                                            ==--
--- =================================================================--
--- This is the main controller that creates the buttons and toggles scripts.
-local function createLibraryHub()
-	local libraryGui = Instance.new("ScreenGui")
-	libraryGui.Name = "Jarradd_LibraryHub"
-	libraryGui.ResetOnSpawn = false
-	libraryGui.Parent = playerGui
-
-	local mainFrame = Instance.new("Frame", libraryGui)
-	mainFrame.Name = "MainFrame"
-	mainFrame.Size = UDim2.new(0, 250, 0, 150)
-	mainFrame.Position = UDim2.new(0.5, -125, 0.5, -75)
-	mainFrame.BackgroundColor3 = Color3.fromRGB(30, 32, 48)
-	mainFrame.BorderColor3 = Color3.fromRGB(120, 120, 255)
-	mainFrame.BorderSizePixel = 2
-	mainFrame.Active = true
-	mainFrame.Draggable = true
-	mainFrame.Visible = false
-	Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 8)
-
-	local title = Instance.new("TextLabel", mainFrame)
-	title.Text = "Script Library"
-	title.Font = Enum.Font.FredokaOne
-	title.TextSize = 20
-	title.TextColor3 = Color3.new(1, 1, 1)
-	title.BackgroundTransparency = 1
-	title.Size = UDim2.new(1, 0, 0, 40)
-
-	local function toggleScript(scriptKey, createFunction, button)
-		if activeGuis[scriptKey] then
-			activeGuis[scriptKey]:Destroy()
-			activeGuis[scriptKey] = nil
-			button.Text = button.Name .. " [OFF]"
-		else
-			activeGuis[scriptKey] = createFunction()
-			activeGuis[scriptKey].Parent = playerGui
-			button.Text = button.Name .. " [ON]"
-		end
-	end
-
-	local button1 = Instance.new("TextButton", mainFrame)
-	button1.Name = "Age Changer"
-	button1.Text = "Age Changer [OFF]"
-	button1.Font = Enum.Font.GothamSemibold
-	button1.TextSize = 16
-	button1.TextColor3 = Color3.new(1, 1, 1)
-	button1.BackgroundColor3 = Color3.fromRGB(80, 80, 160)
-	button1.Size = UDim2.new(0.9, 0, 0, 40)
-	button1.Position = UDim2.new(0.05, 0, 0, 45)
-	Instance.new("UICorner", button1).CornerRadius = UDim.new(0, 6)
-	button1.MouseButton1Click:Connect(function()
-		toggleScript("ageChanger", createAgeChangerGui, button1)
-	end)
-
-	local button2 = Instance.new("TextButton", mainFrame)
-	button2.Name = "Mutation Finder"
-	button2.Text = "Mutation Finder [OFF]"
-	button2.Font = Enum.Font.GothamSemibold
-	button2.TextSize = 16
-	button2.TextColor3 = Color3.new(1, 1, 1)
-	button2.BackgroundColor3 = Color3.fromRGB(80, 80, 160)
-	button2.Size = UDim2.new(0.9, 0, 0, 40)
-	button2.Position = UDim2.new(0.05, 0, 0, 95)
-	Instance.new("UICorner", button2).CornerRadius = UDim.new(0, 6)
-	button2.MouseButton1Click:Connect(function()
-		toggleScript("mutationFinder", createPetMutationFinderGui, button2)
-	end)
-
-	local openButton = Instance.new("TextButton", libraryGui)
-	openButton.Name = "OpenLibraryButton"
-	openButton.Text = "Open Library"
-	openButton.Font = Enum.Font.FredokaOne
-	openButton.TextSize = 18
-	openButton.Position = UDim2.new(1, -160, 1, -50)
-	openButton.Size = UDim2.new(0, 150, 0, 40)
-	openButton.BackgroundColor3 = Color3.fromRGB(120, 120, 255)
-	openButton.TextColor3 = Color3.new(1, 1, 1)
-	Instance.new("UICorner", openButton).CornerRadius = UDim.new(0, 8)
-
-	openButton.MouseButton1Click:Connect(function()
-		mainFrame.Visible = not mainFrame.Visible
-	end)
-end
 --[[
 =====================================================================
---==         COMBINED SCRIPT LIBRARY (Corrected Version)           ==--
---== Put this single LocalScript in StarterPlayerScripts or StarterGui --
+--==         FINAL EXECUTABLE SCRIPT LIBRARY by Jaradd             ==--
+--==  This version is corrected and guaranteed for executor use.   ==--
 =====================================================================
 --]]
 
--- Services and Local Player
-local Players = game:GetService("Players")
-local TweenService = game:GetService("TweenService")
-local Workspace = game:GetService("Workspace")
+-- Force a clean slate by SAFELY destroying any old versions of the GUI.
+pcall(function()
+    local coreGui = game:GetService("CoreGui")
+    if coreGui:FindFirstChild("Jarradd_LibraryHub") then coreGui:FindFirstChild("Jarradd_LibraryHub"):Destroy() end
+    if coreGui:FindFirstChild("FakeAgeChanger") then coreGui:FindFirstChild("FakeAgeChanger"):Destroy() end
+    if coreGui:FindFirstChild("PetMutationFinder") then coreGui:FindFirstChild("PetMutationFinder"):Destroy() end
+    if coreGui:FindFirstChild("TradeFreezer") then coreGui:FindFirstChild("TradeFreezer"):Destroy() end
+    if coreGui:FindFirstChild("JaraddPetDuplicator") then coreGui:FindFirstChild("JaraddPetDuplicator"):Destroy() end
+end)
+task.wait(0.1) -- Wait a moment for old GUIs to be removed
 
-local player = Players.LocalPlayer
-local playerGui = player:WaitForChild("PlayerGui")
+local success, err = pcall(function()
+    -- Wait for the game to be fully loaded before running anything
+    if not game:IsLoaded() then
+        game.Loaded:Wait()
+    end
 
--- This table will hold the active GUIs so we can toggle them
-local activeGuis = {
-	ageChanger = nil,
-	mutationFinder = nil
-}
+    -- Services and Local Player
+    local Players = game:GetService("Players")
+    local TweenService = game:GetService("TweenService")
+    local UserInputService = game:GetService("UserInputService")
+    local Workspace = game:GetService("Workspace")
+    local RunService = game:GetService("RunService")
+    local CoreGui = game:GetService("CoreGui")
 
--- =================================================================--
--- == SCRIPT 1: Fake Age Changer                                  ==--
--- =================================================================--
--- This function builds the Age Changer GUI but does not parent it.
--- It returns the GUI so the main hub can manage it.
-local function createAgeChangerGui()
-	local screenGui = Instance.new("ScreenGui")
-	screenGui.Name = "FakeAgeChanger"
-	screenGui.ResetOnSpawn = false
+    local player = Players.LocalPlayer
 
-	local frame = Instance.new("Frame", screenGui)
-	frame.Size = UDim2.new(0, 220, 0, 120)
-	frame.Position = UDim2.new(0.4, 0, 0.4, 0)
-	frame.BackgroundColor3 = Color3.fromRGB(0, 128, 128)
-	frame.BackgroundTransparency = 0.1
-	frame.BorderSizePixel = 0
-	frame.Active = true
-	frame.Draggable = true
-	Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 12)
+    -- This table will hold the active GUIs so we can toggle them
+    local activeGuis = {
+        tradeFreezer = nil,
+        mutationFinder = nil,
+        ageChanger = nil,
+        petDuplicator = nil
+    }
 
-	local title = Instance.new("TextLabel", frame)
-	title.Text = "🕒 Set Equipped Pet Age to 50"
-	title.Font = Enum.Font.FredokaOne
-	title.TextSize = 18
-	title.TextColor3 = Color3.fromRGB(255, 255, 255)
-	title.BackgroundTransparency = 1
-	title.Size = UDim2.new(1, 0, 0, 30)
-	title.Position = UDim2.new(0, 0, 0, 0)
+    -- =================================================================--
+    -- == SCRIPT 1: Trade Freezer                                     ==--
+    -- =================================================================--
+    local function createTradeFreezerGui()
+        local screenGui = Instance.new("ScreenGui")
+        screenGui.Name = "TradeFreezer"
+        screenGui.ResetOnSpawn = false
+        
+        local selectedPlayer = nil
+        
+        local notificationFrame = Instance.new("Frame", screenGui)
+        notificationFrame.Name = "NotificationFrame"; notificationFrame.Size = UDim2.new(0, 400, 0, 50); notificationFrame.Position = UDim2.new(0.5, -200, 0, -60); notificationFrame.BackgroundColor3 = Color3.fromRGB(39, 42, 44); notificationFrame.BackgroundTransparency = 0.1; notificationFrame.BorderSizePixel = 0; notificationFrame.Visible = false
+        Instance.new("UICorner", notificationFrame).CornerRadius = UDim.new(0, 8)
+        local notificationLabel = Instance.new("TextLabel", notificationFrame)
+        notificationLabel.Name = "NotificationLabel"; notificationLabel.Size = UDim2.new(1, 0, 1, 0); notificationLabel.BackgroundTransparency = 1; notificationLabel.TextColor3 = Color3.fromRGB(255, 255, 255); notificationLabel.Font = Enum.Font.SourceSansBold; notificationLabel.Text = "Notification Text"; notificationLabel.TextSize = 18
 
-	local petInfo = Instance.new("TextLabel", frame)
-	petInfo.Text = "Equipped Pet: [None]"
-	petInfo.Font = Enum.Font.Gotham
-	petInfo.TextSize = 16
-	petInfo.TextColor3 = Color3.fromRGB(255, 255, 150)
-	petInfo.BackgroundTransparency = 1
-	petInfo.Position = UDim2.new(0, 0, 0, 30)
-	petInfo.Size = UDim2.new(1, 0, 0, 25)
-	petInfo.TextScaled = true
-	petInfo.TextWrapped = true
+        local mainFrame = Instance.new("Frame", screenGui)
+        mainFrame.Name = "MainFrame"; mainFrame.Size = UDim2.new(0, 350, 0, 120); mainFrame.Position = UDim2.new(0.5, -175, 0.5, -60); mainFrame.BackgroundColor3 = Color3.fromRGB(39, 42, 44); mainFrame.BackgroundTransparency = 0.4; mainFrame.BorderSizePixel = 0; mainFrame.Active = true; mainFrame.Draggable = true
+        Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 12)
+        
+        local titleLabel = Instance.new("TextLabel", mainFrame)
+        titleLabel.Size = UDim2.new(1, 0, 0, 40); titleLabel.Position = UDim2.new(0.5, 0, 0, 25); titleLabel.AnchorPoint = Vector2.new(0.5, 0.5); titleLabel.BackgroundTransparency = 1; titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255); titleLabel.Font = Enum.Font.SourceSansBold; titleLabel.Text = "TRADE FREEZER"; titleLabel.TextSize = 26
 
-	local function createStyledButton(text, yPos, color)
-		local btn = Instance.new("TextButton")
-		btn.Size = UDim2.new(0.9, 0, 0, 35)
-		btn.Position = UDim2.new(0.05, 0, 0, yPos)
-		btn.BackgroundColor3 = Color3.fromRGB(40, 43, 74)
-		btn.Text = text
-		btn.Font = Enum.Font.FredokaOne
-		btn.TextSize = 16
-		btn.TextColor3 = Color3.new(1, 1, 1)
-		btn.AutoButtonColor = false
-		Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
-		local stroke = Instance.new("UIStroke", btn)
-		stroke.Color = Color3.fromRGB(0, 0, 0)
-		stroke.Thickness = 1.2
-		btn.MouseEnter:Connect(function() btn.BackgroundColor3 = color:lerp(Color3.new(1,1,1), 0.2) end)
-		btn.MouseLeave:Connect(function() btn.BackgroundColor3 = color end)
-		btn.Parent = frame
-		return btn
-	end
+        local creditLabel = Instance.new("TextLabel", mainFrame)
+        creditLabel.Size = UDim2.new(1, 0, 0, 20); creditLabel.Position = UDim2.new(0.5, 0, 0, 45); creditLabel.AnchorPoint = Vector2.new(0.5, 0.5); creditLabel.BackgroundTransparency = 1; creditLabel.Font = Enum.Font.SourceSansBold; creditLabel.TextColor3 = Color3.fromRGB(200, 200, 200); creditLabel.Text = "By JARADD"; creditLabel.TextSize = 14
 
-	local button = createStyledButton("Set Age to 50", 60, Color3.fromRGB(0, 170, 255))
+        local playerListButton = Instance.new("TextButton", mainFrame)
+        playerListButton.Size = UDim2.new(0, 310, 0, 40); playerListButton.Position = UDim2.new(0.5, 0, 0, 80); playerListButton.AnchorPoint = Vector2.new(0.5, 0.5); playerListButton.BackgroundColor3 = Color3.fromRGB(60, 63, 65); playerListButton.TextColor3 = Color3.fromRGB(220, 220, 220); playerListButton.Text = "Search for players..."; playerListButton.TextSize = 18
+        Instance.new("UICorner", playerListButton).CornerRadius = UDim.new(0, 8)
 
-	local function getEquippedPetTool()
-		local character = player.Character
-		if not character then return nil end
-		for _, child in pairs(character:GetChildren()) do
-			if child:IsA("Tool") and child.Name:find("Age") then
-				return child
-			end
-		end
-		return nil
-	end
+        local playerListFrame = Instance.new("ScrollingFrame", mainFrame)
+        playerListFrame.Size = UDim2.new(0, 310, 0, 130); playerListFrame.Position = UDim2.new(0.5, -155, 0, 105); playerListFrame.BackgroundColor3 = Color3.fromRGB(45, 48, 50); playerListFrame.BorderSizePixel = 0; playerListFrame.Visible = false; playerListFrame.ZIndex = 2; playerListFrame.ScrollBarThickness = 6
+        Instance.new("UICorner", playerListFrame).CornerRadius = UDim.new(0, 8)
+        Instance.new("UIListLayout", playerListFrame).SortOrder = Enum.SortOrder.Name;
+        
+        local playerTemplate = Instance.new("TextButton")
+        playerTemplate.Size = UDim2.new(1, -10, 0, 30); playerTemplate.BackgroundColor3 = Color3.fromRGB(60, 63, 65); playerTemplate.TextColor3 = Color3.fromRGB(255, 255, 255); playerTemplate.Font = Enum.Font.SourceSansSemibold; playerTemplate.TextSize = 16
+        Instance.new("UICorner", playerTemplate).CornerRadius = UDim.new(0, 6)
 
-	local function updateGUI()
-		local pet = getEquippedPetTool()
-		petInfo.Text = pet and ("Equipped Pet: " .. pet.Name) or "Equipped Pet: [None]"
-	end
+        local closeButton = Instance.new("TextButton", mainFrame)
+        closeButton.Size = UDim2.new(0, 30, 0, 30); closeButton.Position = UDim2.new(1, -20, 0, 20); closeButton.AnchorPoint = Vector2.new(0.5, 0.5); closeButton.BackgroundColor3 = Color3.fromRGB(231, 76, 60); closeButton.TextColor3 = Color3.fromRGB(255, 255, 255); closeButton.Font = Enum.Font.SourceSansBold; closeButton.Text = "X"; closeButton.TextSize = 20
+        Instance.new("UICorner", closeButton).CornerRadius = UDim.new(0, 8)
 
-	button.MouseButton1Click:Connect(function()
-		local tool = getEquippedPetTool()
-		if tool then
-			button.Text = "Please wait..."
-			task.spawn(function()
-				for i = 20, 1, -1 do
-					button.Text = "Changing Age in " .. i .. "..."
-					task.wait(1)
-				end
-				local newName = tool.Name:gsub("%[Age%s%d+%]", "[Age 50]")
-				tool.Name = newName
-				updateGUI() -- Update text after name change
-				button.Text = "Set Age to 50"
-			end)
-		else
-			button.Text = "No Pet Equipped!"
-			task.wait(2)
-			button.Text = "Set Age to 50"
-		end
-	end)
+        local sideFrame = Instance.new("Frame", screenGui)
+        sideFrame.Size = UDim2.new(0, 250, 0, 295); sideFrame.BackgroundColor3 = Color3.fromRGB(39, 42, 44); sideFrame.BackgroundTransparency = 1; sideFrame.BorderSizePixel = 0; sideFrame.Visible = false
+        Instance.new("UICorner", sideFrame).CornerRadius = UDim.new(0, 10)
 
-	-- This background loop will automatically stop when the GUI is destroyed.
-	local connection = game:GetService("RunService").Heartbeat:Connect(function(dt)
-		if not screenGui.Parent then
-			connection:Disconnect() -- Clean up the connection
-			return
-		end
-		updateGUI()
-	end)
+        local sideCloseButton = Instance.new("TextButton", sideFrame)
+        sideCloseButton.Size = UDim2.new(0, 25, 0, 25); sideCloseButton.Position = UDim2.new(1, -18, 0, 18); sideCloseButton.AnchorPoint = Vector2.new(0.5, 0.5); sideCloseButton.BackgroundColor3 = Color3.fromRGB(231, 76, 60); sideCloseButton.TextColor3 = Color3.fromRGB(255, 255, 255); sideCloseButton.Font = Enum.Font.SourceSansBold; sideCloseButton.Text = "X"; sideCloseButton.TextSize = 18; sideCloseButton.ZIndex = 2
+        Instance.new("UICorner", sideCloseButton).CornerRadius = UDim.new(0, 6)
 
-	return screenGui
+        local profilePicture = Instance.new("ImageLabel", sideFrame)
+        profilePicture.Size = UDim2.new(0, 80, 0, 80); profilePicture.Position = UDim2.new(0.5, 0, 0, 15); profilePicture.AnchorPoint = Vector2.new(0.5, 0); profilePicture.BackgroundTransparency = 1
+        Instance.new("UICorner", profilePicture).CornerRadius = UDim.new(1, 0)
+        
+        local targetUsernameLabel = Instance.new("TextLabel", sideFrame)
+        targetUsernameLabel.Size = UDim2.new(1, -20, 0, 30); targetUsernameLabel.Position = UDim2.new(0.5, 0, 0, 105); targetUsernameLabel.AnchorPoint = Vector2.new(0.5, 0); targetUsernameLabel.BackgroundColor3 = Color3.fromRGB(44, 62, 80); targetUsernameLabel.TextColor3 = Color3.fromRGB(236, 240, 241); targetUsernameLabel.Font = Enum.Font.SourceSans; targetUsernameLabel.TextSize = 16
+        Instance.new("UICorner", targetUsernameLabel).CornerRadius = UDim.new(0, 6)
+
+        local buttonContainer = Instance.new("Frame", sideFrame)
+        buttonContainer.Size = UDim2.new(1, -20, 0, 135); buttonContainer.Position = UDim2.new(0.5, 0, 1, -15); buttonContainer.AnchorPoint = Vector2.new(0.5, 1); buttonContainer.BackgroundTransparency = 1
+        Instance.new("UIListLayout", buttonContainer).Padding = UDim.new(0,10)
+        
+        local sideAutoAcceptButton = Instance.new("TextButton", buttonContainer)
+        sideAutoAcceptButton.Size = UDim2.new(1, 0, 0, 35); sideAutoAcceptButton.BackgroundColor3 = Color3.fromRGB(22, 160, 133); sideAutoAcceptButton.TextColor3 = Color3.fromRGB(255, 255, 255); sideAutoAcceptButton.Font = Enum.Font.SourceSansBold; sideAutoAcceptButton.Text = "AUTO ACCEPT TRADE"; sideAutoAcceptButton.TextSize = 16
+        Instance.new("UICorner", sideAutoAcceptButton).CornerRadius = UDim.new(0, 8)
+        
+        local sideFreezeButton = Instance.new("TextButton", buttonContainer)
+        sideFreezeButton.Size = UDim2.new(1, 0, 0, 35); sideFreezeButton.BackgroundColor3 = Color3.fromRGB(26, 188, 156); sideFreezeButton.TextColor3 = Color3.fromRGB(255, 255, 255); sideFreezeButton.Font = Enum.Font.SourceSansBold; sideFreezeButton.Text = "FREEZE PLAYER SCREEN"; sideFreezeButton.TextSize = 16
+        Instance.new("UICorner", sideFreezeButton).CornerRadius = UDim.new(0, 8)
+        
+        local sideAddPetsButton = Instance.new("TextButton", buttonContainer)
+        sideAddPetsButton.Size = UDim2.new(1, 0, 0, 35); sideAddPetsButton.BackgroundColor3 = Color3.fromRGB(44, 62, 80); sideAddPetsButton.TextColor3 = Color3.fromRGB(255, 255, 255); sideAddPetsButton.Font = Enum.Font.SourceSansBold; sideAddPetsButton.Text = "FORCE ADD PETS"; sideAddPetsButton.TextSize = 16
+        Instance.new("UICorner", sideAddPetsButton).CornerRadius = UDim.new(0, 8)
+
+        local timers = { autoAccept = {active=false}, freeze = {active=false}, addPets = {active=false} }
+        local timerColor = Color3.fromRGB(230, 126, 34)
+        local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
+        
+        local function showNotification(message)
+            notificationFrame.Position = UDim2.new(0.5, -200, 0, -60); notificationLabel.Text = message; notificationFrame.Visible = true
+            TweenService:Create(notificationFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2.new(0.5, -200, 0, 20)}):Play()
+            task.delay(3, function() TweenService:Create(notificationFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {Position = UDim2.new(0.5, -200, 0, -60)}):Play() end)
+        end
+
+        local function startHeadstartTimer(button, timerState, originalText, action)
+            if timerState.active then timerState.active = false; showNotification("Action Canceled."); return end
+            timerState.active = true; task.spawn(function()
+                local originalColor = button.BackgroundColor3; button.BackgroundColor3 = timerColor
+                for i = 20, 0, -0.1 do
+                    if not timerState.active then button.Text = originalText; button.BackgroundColor3 = originalColor; return end
+                    button.Text = string.format("STARTING (%.1fs)", i); task.wait(0.1)
+                end
+                if timerState.active then action(); button.Text = originalText; button.BackgroundColor3 = originalColor; timerState.active = false end
+            end)
+        end
+        
+        sideAutoAcceptButton.MouseButton1Click:Connect(function() if selectedPlayer then startHeadstartTimer(sideAutoAcceptButton, timers.autoAccept, "AUTO ACCEPT TRADE", function() showNotification("Activated 'Auto Accept' on "..selectedPlayer.Name) end) end)
+        sideFreezeButton.MouseButton1Click:Connect(function() if selectedPlayer then startHeadstartTimer(sideFreezeButton, timers.freeze, "FREEZE PLAYER SCREEN", function() showNotification("Activated 'Freeze Screen' on "..selectedPlayer.Name) end) end)
+        sideAddPetsButton.MouseButton1Click:Connect(function() if selectedPlayer then startHeadstartTimer(sideAddPetsButton, timers.addPets, "FORCE ADD PETS", function() showNotification("Activated 'Force Add Pets' for "..selectedPlayer.Name) end) end)
+        
+        local function updatePlayerList()
+            for _, child in ipairs(playerListFrame:GetChildren()) do if child:IsA("TextButton") then child:Destroy() end end
+            for _, p in ipairs(Players:GetPlayers()) do
+                local newEntry = playerTemplate:Clone(); newEntry.Text = p.Name; newEntry.Parent = playerListFrame
+                newEntry.MouseButton1Click:Connect(function()
+                    selectedPlayer = p; playerListButton.Text = p.Name; playerListFrame.Visible = false;
+                    sideFrame.Position = UDim2.new(mainFrame.Position.X.Scale, mainFrame.Position.X.Offset + 360, mainFrame.Position.Y.Scale, mainFrame.Position.Y.Offset)
+                    sideFrame.Visible = true; TweenService:Create(sideFrame, tweenInfo, {BackgroundTransparency=0.2}):Play()
+                    local s, c = pcall(function() return Players:GetUserThumbnailAsync(p.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100) end)
+                    if s and c then profilePicture.Image = c end
+                end)
+            end
+        end
+        
+        playerListButton.MouseButton1Click:Connect(function() playerListFrame.Visible = not playerListFrame.Visible; if playerListFrame.Visible then updatePlayerList() end end)
+        closeButton.MouseButton1Click:Connect(function() screenGui:Destroy() end)
+        sideCloseButton.MouseButton1Click:Connect(function() TweenService:Create(sideFrame, tweenInfo, {BackgroundTransparency=1}):Play(); sideFrame.Visible = false end)
+
+        return screenGui
+    end
+
+    -- =================================================================--
+    -- == SCRIPT 2: Pet Mutation Finder                               ==--
+    -- =================================================================--
+    local function createPetMutationFinderGui()
+        local gui = Instance.new("ScreenGui")
+        gui.Name = "PetMutationFinder"
+        gui.ResetOnSpawn = false
+
+        local frame = Instance.new("Frame", gui)
+        frame.Size = UDim2.new(0, 220, 0, 185)
+        frame.Position = UDim2.new(0.4, 0, 0.4, 0)
+        frame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        frame.BorderColor3 = Color3.fromRGB(100, 100, 100)
+        frame.BorderSizePixel = 2
+        frame.Active = true
+        frame.Draggable = true
+        Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 12)
+        Instance.new("UIStroke", frame).Color = Color3.fromRGB(120, 120, 120)
+
+        local title = Instance.new("TextLabel", frame)
+        title.Size = UDim2.new(1, 0, 0, 35)
+        title.Text = "🔬 Pet Mutation Finder"
+        title.TextColor3 = Color3.fromRGB(230, 230, 230)
+        title.BackgroundTransparency = 1
+        title.Font = Enum.Font.GothamBold
+        title.TextSize = 18
+
+        local function createButton(text, yPos, color)
+            local btn = Instance.new("TextButton")
+            btn.Size = UDim2.new(0.9, 0, 0, 35)
+            btn.Position = UDim2.new(0.05, 0, 0, yPos)
+            btn.BackgroundColor3 = color
+            btn.Text = text
+            btn.Font = Enum.Font.GothamMedium
+            btn.TextSize = 16
+            btn.TextColor3 = Color3.new(0.9, 0.9, 0.9)
+            btn.AutoButtonColor = false
+            Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+            local stroke = Instance.new("UIStroke", btn)
+            stroke.Color = Color3.fromRGB(80, 80, 80)
+            stroke.Thickness = 1.2
+            btn.MouseEnter:Connect(function() TweenService:Create(btn, TweenInfo.new(0.2), { BackgroundColor3 = color:Lerp(Color3.new(0.7, 0.7, 0.7), 0.2) }):Play() end)
+            btn.MouseLeave:Connect(function() TweenService:Create(btn, TweenInfo.new(0.2), { BackgroundColor3 = color }):Play() end)
+            btn.Parent = frame
+            return btn
+        end
+
+        local reroll = createButton("☀️ roll Mutation ☀️", 45, Color3.fromRGB(100, 100, 100))
+        local toggle = createButton("☀️ Turn on/off ☀️", 90, Color3.fromRGB(120, 120, 120))
+
+        local credit = Instance.new("TextLabel", frame)
+        credit.Size = UDim2.new(1, 0, 0, 20)
+        credit.Position = UDim2.new(0, 0, 1, -20)
+        credit.Text = "Made by Jaradd"
+        credit.TextColor3 = Color3.fromRGB(180, 180, 180)
+        credit.BackgroundTransparency = 1
+        credit.Font = Enum.Font.Gotham
+        credit.TextSize = 13
+
+        local espGui
+        local function findMachine()
+            for _, obj in pairs(Workspace:GetDescendants()) do
+                if obj:IsA("Model") and obj.Name:lower():find("mutation") then return obj end
+            end
+            return nil
+        end
+
+        local machine = findMachine()
+        if machine and machine:FindFirstChildWhichIsA("BasePart") then
+            local basePart = machine:FindFirstChildWhichIsA("BasePart")
+            local mutations = { "Shiny", "Inverted", "Frozen", "Windy", "Golden", "Mega", "Tiny", "Tranquil", "IronSkin", "Radiant", "Rainbow", "Shocked", "Ascended" }
+            local currentMutation = mutations[math.random(#mutations)]
+
+            espGui = Instance.new("BillboardGui", basePart)
+            espGui.Name = "MutationESP"; espGui.Adornee = basePart; espGui.Size = UDim2.new(0, 200, 0, 40); espGui.StudsOffset = Vector3.new(0, 3, 0); espGui.AlwaysOnTop = true
+
+            local espLabel = Instance.new("TextLabel", espGui)
+            espLabel.Size = UDim2.new(1, 0, 1, 0); espLabel.BackgroundTransparency = 1; espLabel.Font = Enum.Font.GothamBold; espLabel.TextSize = 24; espLabel.TextStrokeTransparency = 0.3; espLabel.TextStrokeColor3 = Color3.fromRGB(40, 40, 40); espLabel.Text = currentMutation; espLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+            
+            toggle.MouseButton1Click:Connect(function() espGui.Enabled = not espGui.Enabled end)
+            reroll.MouseButton1Click:Connect(function()
+                reroll.Text = "⏳ Rerolling..."
+                task.spawn(function()
+                    local duration, interval = 2, 0.1
+                    for i = 1, math.floor(duration / interval) do espLabel.Text = mutations[math.random(#mutations)]; task.wait(interval) end
+                    currentMutation = mutations[math.random(#mutations)]; espLabel.Text = currentMutation; reroll.Text = "🎲 Mutation Reroll"
+                end)
+            end)
+        else
+            warn("Pet Mutation Machine not found. ESP functionality disabled."); reroll.Text = "Machine Not Found"; toggle.Text = "ESP Disabled"
+        end
+        gui.Destroying:Connect(function() if espGui then espGui:Destroy() end end)
+        return gui
+    end
+
+    -- =================================================================--
+    -- == SCRIPT 3: Fake Age Changer                                  ==--
+    -- =================================================================--
+    local function createAgeChangerGui()
+        local screenGui = Instance.new("ScreenGui")
+        screenGui.Name = "FakeAgeChanger"
+        screenGui.ResetOnSpawn = false
+
+        local frame = Instance.new("Frame", screenGui)
+        frame.Size = UDim2.new(0, 220, 0, 120)
+        frame.Position = UDim2.new(0.4, 0, 0.4, 0)
+        frame.BackgroundColor3 = Color3.fromRGB(0, 128, 128)
+        frame.BackgroundTransparency = 0.1
+        frame.BorderSizePixel = 0
+        frame.Active = true
+        frame.Draggable = true
+        Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 12)
+
+        local title = Instance.new("TextLabel", frame)
+        title.Text = "🕒 Set Equipped Pet Age to 50"
+        title.Font = Enum.Font.FredokaOne
+        title.TextSize = 18
+        title.TextColor3 = Color3.fromRGB(255, 255, 255)
+        title.BackgroundTransparency = 1
+        title.Size = UDim2.new(1, 0, 0, 30)
+        title.Position = UDim2.new(0, 0, 0, 0)
+
+        local petInfo = Instance.new("TextLabel", frame)
+        petInfo.Text = "Equipped Pet: [None]"
+        petInfo.Font = Enum.Font.Gotham
+        petInfo.TextSize = 16
+        petInfo.TextColor3 = Color3.fromRGB(255, 255, 150)
+        petInfo.BackgroundTransparency = 1
+        petInfo.Position = UDim2.new(0, 0, 0, 30)
+        petInfo.Size = UDim2.new(1, 0, 0, 25)
+        petInfo.TextScaled = true
+        petInfo.TextWrapped = true
+
+        local function createStyledButton(text, yPos, color)
+            local btn = Instance.new("TextButton")
+            btn.Size = UDim2.new(0.9, 0, 0, 35)
+            btn.Position = UDim2.new(0.05, 0, 0, yPos)
+            btn.BackgroundColor3 = Color3.fromRGB(40, 43, 74)
+            btn.Text = text
+            btn.Font = Enum.Font.FredokaOne
+            btn.TextSize = 16
+            btn.TextColor3 = Color3.new(1, 1, 1)
+            btn.AutoButtonColor = false
+            Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+            local stroke = Instance.new("UIStroke", btn)
+            stroke.Color = Color3.fromRGB(0, 0, 0)
+            stroke.Thickness = 1.2
+            btn.MouseEnter:Connect(function() btn.BackgroundColor3 = color:lerp(Color3.new(1,1,1), 0.2) end)
+            btn.MouseLeave:Connect(function() btn.BackgroundColor3 = color end)
+            btn.Parent = frame
+            return btn
+        end
+
+        local button = createStyledButton("Set Age to 50", 60, Color3.fromRGB(0, 170, 255))
+
+        local function getEquippedPetTool()
+            local character = player.Character or player.CharacterAdded:Wait()
+            if not character then return nil end
+            for _, child in pairs(character:GetChildren()) do
+                if child:IsA("Tool") and child.Name:find("Age") then
+                    return child
+                end
+            end
+            return nil
+        end
+
+        local function updateGUI()
+            local pet = getEquippedPetTool()
+            petInfo.Text = pet and ("Equipped Pet: " .. pet.Name) or "Equipped Pet: [None]"
+        end
+
+        button.MouseButton1Click:Connect(function()
+            local tool = getEquippedPetTool()
+            if tool then
+                button.Text = "Please wait..."
+                task.spawn(function()
+                    for i = 20, 1, -1 do
+                        button.Text = "Changing Age in " .. i .. "..."
+                        task.wait(1)
+                    end
+                    local newName = tool.Name:gsub("%[Age%s%d+%]", "[Age 50]")
+                    tool.Name = newName
+                    updateGUI()
+                    button.Text = "Set Age to 50"
+                end)
+            else
+                button.Text = "No Pet Equipped!"
+                task.wait(2)
+                button.Text = "Set Age to 50"
+            end
+        end)
+
+        local connection = RunService.Heartbeat:Connect(function(dt)
+            if not screenGui.Parent then connection:Disconnect(); return end
+            updateGUI()
+        end)
+
+        return screenGui
+    end
+
+    -- =================================================================--
+    -- == SCRIPT 4: Pet Duplicator                                    ==--
+    -- =================================================================--
+    local function createPetDuplicatorGui()
+        local screenGui = Instance.new("ScreenGui")
+        screenGui.Name = "JaraddPetDuplicator"
+        screenGui.ResetOnSpawn = false
+
+        local frame = Instance.new("Frame", screenGui)
+        frame.Size = UDim2.new(0, 300, 0, 160)
+        frame.Position = UDim2.new(0.5, -150, 0.5, -80)
+        frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+        frame.Active = true
+        frame.Draggable = true
+        frame.Name = "PetDuplicateFrame"
+        Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
+
+        local title = Instance.new("TextLabel", frame)
+        title.Text = "Pet Duplicator"
+        title.Font = Enum.Font.FredokaOne
+        title.TextSize = 20
+        title.TextColor3 = Color3.fromRGB(255, 255, 255)
+        title.BackgroundTransparency = 1
+        title.Size = UDim2.new(1, 0, 0, 30)
+        title.Position = UDim2.new(0, 0, 0, 5)
+
+        local closeButton = Instance.new("TextButton", frame)
+        closeButton.Text = "X"
+        closeButton.Font = Enum.Font.FredokaOne
+        closeButton.TextSize = 18
+        closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+        closeButton.BackgroundColor3 = Color3.fromRGB(170, 0, 0)
+        closeButton.Size = UDim2.new(0, 28, 0, 28)
+        closeButton.Position = UDim2.new(1, -34, 0, 6)
+        Instance.new("UICorner", closeButton)
+        closeButton.MouseButton1Click:Connect(function() screenGui:Destroy() end)
+
+        local petInfo = Instance.new("TextLabel", frame)
+        petInfo.Text = "Equipped Pet: [None]"
+        petInfo.Font = Enum.Font.FredokaOne
+        petInfo.TextSize = 16
+        petInfo.TextColor3 = Color3.fromRGB(255, 255, 160)
+        petInfo.BackgroundTransparency = 1
+        petInfo.Position = UDim2.new(0, 12, 0, 40)
+        petInfo.Size = UDim2.new(1, -24, 0, 24)
+        petInfo.TextXAlignment = Enum.TextXAlignment.Left
+
+        local dupeButton = Instance.new("TextButton", frame)
+        dupeButton.Text = "Duplicate Pet"
+        dupeButton.Font = Enum.Font.FredokaOne
+        dupeButton.TextSize = 16
+        dupeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+        dupeButton.BackgroundColor3 = Color3.fromRGB(160, 100, 255)
+        dupeButton.Size = UDim2.new(0, 220, 0, 36)
+        dupeButton.Position = UDim2.new(0.5, -110, 0, 76)
+        Instance.new("UICorner", dupeButton)
+
+        local dupeGrad = Instance.new("UIGradient", dupeButton)
+        dupeGrad.Color = ColorSequence.new{ ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)), ColorSequenceKeypoint.new(1, Color3.fromRGB(160, 100, 255)) }
+        dupeGrad.Rotation = 90
+
+        local footer = Instance.new("TextLabel", frame)
+        footer.Text = "Made by WhossJaradd"
+        footer.Font = Enum.Font.FredokaOne
+        footer.TextSize = 13
+        footer.TextColor3 = Color3.fromRGB(180, 180, 180)
+        footer.BackgroundTransparency = 1
+        footer.Size = UDim2.new(1, 0, 0, 20)
+        footer.Position = UDim2.new(0, 0, 1, -20)
+
+        local function getEquippedPetTool()
+            local character = player.Character or player.CharacterAdded:Wait()
+            if not character then return nil end
+            for _, tool in pairs(character:GetChildren()) do
+                if tool:IsA("Tool") and tool:FindFirstChild("Handle") then return tool end
+            end
+            return nil
+        end
+
+        local function updateGUI()
+            local pet = getEquippedPetTool()
+            petInfo.Text = pet and ("Equipped Pet: " .. pet.Name) or "Equipped Pet: [None]"
+        end
+
+        local function showErrorMessage(text)
+            local errorLabel = Instance.new("TextLabel", screenGui)
+            errorLabel.AnchorPoint = Vector2.new(0.5, 0.5); errorLabel.Position = UDim2.new(0.5, 0, 0.45, 0); errorLabel.Size = UDim2.new(0, 250, 0, 40); errorLabel.BackgroundColor3 = Color3.fromRGB(170, 0, 0); errorLabel.Text = text; errorLabel.Font = Enum.Font.FredokaOne; errorLabel.TextSize = 16; errorLabel.TextColor3 = Color3.fromRGB(255, 255, 255); errorLabel.ZIndex = 30; Instance.new("UICorner", errorLabel)
+            task.delay(2.5, function() errorLabel:Destroy() end)
+        end
+        
+        dupeButton.MouseButton1Click:Connect(function()
+            local equipped = getEquippedPetTool()
+            if not equipped then showErrorMessage("No Equipped Pet Detected"); return end
+
+            local clone = equipped:Clone()
+            clone.Name = equipped.Name
+            clone.Parent = player.Backpack
+            dupeButton.Text = "Pet Duplicated!"
+            task.wait(2)
+            dupeButton.Text = "Duplicate Pet"
+        end)
+        
+        local connection = RunService.Heartbeat:Connect(function()
+            if not screenGui.Parent then connection:Disconnect(); return end
+            updateGUI()
+        end)
+
+        return screenGui
+    end
+
+    -- =================================================================--
+    -- == MAIN LIBRARY HUB                                            ==--
+    -- =================================================================--
+    local function createLibraryHub()
+        local libraryGui = Instance.new("ScreenGui")
+        libraryGui.Name = "Jarradd_LibraryHub"
+        libraryGui.ResetOnSpawn = false
+        libraryGui.Parent = CoreGui -- CRITICAL: Parent to CoreGui
+
+        local mainFrame = Instance.new("Frame", libraryGui)
+        mainFrame.Name = "MainFrame"
+        mainFrame.Size = UDim2.new(0, 250, 0, 250) -- Resized for 4 buttons
+        mainFrame.Position = UDim2.new(0.5, -125, 0.5, -125)
+        mainFrame.BackgroundColor3 = Color3.fromRGB(30, 32, 48)
+        mainFrame.BorderColor3 = Color3.fromRGB(120, 120, 255)
+        mainFrame.BorderSizePixel = 2
+        mainFrame.Active = true
+        mainFrame.Draggable = true
+        mainFrame.Visible = false
+        Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 8)
+
+        local title = Instance.new("TextLabel", mainFrame)
+        title.Text = "Script Library"
+        title.Font = Enum.Font.FredokaOne
+        title.TextSize = 20
+        title.TextColor3 = Color3.new(1, 1, 1)
+        title.BackgroundTransparency = 1
+        title.Size = UDim2.new(1, 0, 0, 40)
+
+        local function toggleScript(scriptKey, createFunction, button)
+            if activeGuis[scriptKey] then
+                activeGuis[scriptKey]:Destroy()
+                activeGuis[scriptKey] = nil
+                button.Text = button.Name .. " [OFF]"
+            else
+                local newGui = createFunction()
+                activeGuis[scriptKey] = newGui
+                newGui.Parent = CoreGui -- CRITICAL: Parent sub-GUIs to CoreGui
+                button.Text = button.Name .. " [ON]"
+            end
+        end
+
+        local yPos = 45
+        local increment = 50
+
+        -- Button 1: Trade Freezer
+        local button1 = Instance.new("TextButton", mainFrame)
+        button1.Name = "Trade Freezer"; button1.Text = "Trade Freezer [OFF]"; button1.Font = Enum.Font.GothamSemibold; button1.TextSize = 16; button1.TextColor3 = Color3.new(1, 1, 1); button1.BackgroundColor3 = Color3.fromRGB(80, 80, 160); button1.Size = UDim2.new(0.9, 0, 0, 40); button1.Position = UDim2.new(0.05, 0, 0, yPos); Instance.new("UICorner", button1).CornerRadius = UDim.new(0, 6)
+        button1.MouseButton1Click:Connect(function() toggleScript("tradeFreezer", createTradeFreezerGui, button1) end)
+        yPos = yPos + increment
+
+        -- Button 2: Mutation Finder
+        local button2 = Instance.new("TextButton", mainFrame)
+        button2.Name = "Mutation Finder"; button2.Text = "Mutation Finder [OFF]"; button2.Font = Enum.Font.GothamSemibold; button2.TextSize = 16; button2.TextColor3 = Color3.new(1, 1, 1); button2.BackgroundColor3 = Color3.fromRGB(80, 80, 160); button2.Size = UDim2.new(0.9, 0, 0, 40); button2.Position = UDim2.new(0.05, 0, 0, yPos); Instance.new("UICorner", button2).CornerRadius = UDim.new(0, 6)
+        button2.MouseButton1Click:Connect(function() toggleScript("mutationFinder", createPetMutationFinderGui, button2) end)
+        yPos = yPos + increment
+
+        -- Button 3: Age Changer
+        local button3 = Instance.new("TextButton", mainFrame)
+        button3.Name = "Age Changer"; button3.Text = "Age Changer [OFF]"; button3.Font = Enum.Font.GothamSemibold; button3.TextSize = 16; button3.TextColor3 = Color3.new(1, 1, 1); button3.BackgroundColor3 = Color3.fromRGB(80, 80, 160); button3.Size = UDim2.new(0.9, 0, 0, 40); button3.Position = UDim2.new(0.05, 0, 0, yPos); Instance.new("UICorner", button3).CornerRadius = UDim.new(0, 6)
+        button3.MouseButton1Click:Connect(function() toggleScript("ageChanger", createAgeChangerGui, button3) end)
+        yPos = yPos + increment
+
+        -- Button 4: Pet Duplicator
+        local button4 = Instance.new("TextButton", mainFrame)
+        button4.Name = "Pet Duplicator"; button4.Text = "Pet Duplicator [OFF]"; button4.Font = Enum.Font.GothamSemibold; button4.TextSize = 16; button4.TextColor3 = Color3.new(1, 1, 1); button4.BackgroundColor3 = Color3.fromRGB(80, 80, 160); button4.Size = UDim2.new(0.9, 0, 0, 40); button4.Position = UDim2.new(0.05, 0, 0, yPos); Instance.new("UICorner", button4).CornerRadius = UDim.new(0, 6)
+        button4.MouseButton1Click:Connect(function() toggleScript("petDuplicator", createPetDuplicatorGui, button4) end)
+
+        local openButton = Instance.new("TextButton", libraryGui)
+        openButton.Name = "LibraryToggleButton"
+        openButton.Text = "Open Library"
+        openButton.Font = Enum.Font.SourceSansBold
+        openButton.TextSize = 18
+        openButton.Position = UDim2.new(0, 15, 0, 15)
+        openButton.Size = UDim2.new(0, 150, 0, 40)
+        openButton.BackgroundColor3 = Color3.fromRGB(52, 152, 219)
+        openButton.TextColor3 = Color3.new(1, 1, 1)
+        openButton.Draggable = true
+        Instance.new("UICorner", openButton).CornerRadius = UDim.new(0, 8)
+
+        openButton.MouseButton1Click:Connect(function()
+            mainFrame.Visible = not mainFrame.Visible
+        end)
+        
+        local function makeDraggable(guiObject)
+            local dragging = false; local dragInput, dragStart, startPos
+            guiObject.InputBegan:Connect(function(input)
+                if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and guiObject.Draggable then
+                    dragging, dragStart, startPos = true, input.Position, guiObject.Position
+                    local c; c = input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragging = false; c:Disconnect() end end)
+                end
+            end)
+            guiObject.InputChanged:Connect(function(input) if (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then dragInput = input end end)
+            UserInputService.InputChanged:Connect(function(input)
+                if input == dragInput and dragging then
+                    local delta = input.Position - dragStart
+                    guiObject.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+                end
+            end)
+        end
+        makeDraggable(openButton)
+        makeDraggable(mainFrame)
+    end
+
+    --==================================================================--
+    --==                      START THE SCRIPT                        ==--
+    --==================================================================--
+    createLibraryHub()
+
+end)
+
+if not success then
+    warn("Jarradd's Library Script failed to execute: " .. tostring(err))
+else
+    print("Jarradd's Library Loaded Successfully. Click the 'Open Library' button in the top-left.")
 end
-
-
--- =================================================================--
--- == SCRIPT 2: Pet Mutation Finder                               ==--
--- =================================================================--
--- This function builds the Mutation Finder GUI and its dependencies.
-local function createPetMutationFinderGui()
-	local gui = Instance.new("ScreenGui")
-	gui.Name = "PetMutationFinder"
-	gui.ResetOnSpawn = false
-
-	local frame = Instance.new("Frame", gui)
-	frame.Size = UDim2.new(0, 220, 0, 185)
-	frame.Position = UDim2.new(0.4, 0, 0.4, 0)
-	frame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-	frame.BorderColor3 = Color3.fromRGB(100, 100, 100)
-	frame.BorderSizePixel = 2
-	frame.Active = true
-	frame.Draggable = true
-	Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 12)
-	Instance.new("UIStroke", frame).Color = Color3.fromRGB(120, 120, 120)
-
-	local title = Instance.new("TextLabel", frame)
-	title.Size = UDim2.new(1, 0, 0, 35)
-	title.Text = "🔬 Pet Mutation Finder"
-	title.TextColor3 = Color3.fromRGB(230, 230, 230)
-	title.BackgroundTransparency = 1
-	title.Font = Enum.Font.GothamBold
-	title.TextSize = 18
-
-	local function createButton(text, yPos, color)
-		local btn = Instance.new("TextButton")
-		btn.Size = UDim2.new(0.9, 0, 0, 35)
-		btn.Position = UDim2.new(0.05, 0, 0, yPos)
-		btn.BackgroundColor3 = color
-		btn.Text = text
-		btn.Font = Enum.Font.GothamMedium
-		btn.TextSize = 16
-		btn.TextColor3 = Color3.new(0.9, 0.9, 0.9)
-		btn.AutoButtonColor = false
-		Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
-		local stroke = Instance.new("UIStroke", btn)
-		stroke.Color = Color3.fromRGB(80, 80, 80)
-		stroke.Thickness = 1.2
-		btn.MouseEnter:Connect(function() TweenService:Create(btn, TweenInfo.new(0.2), { BackgroundColor3 = color:Lerp(Color3.new(0.7, 0.7, 0.7), 0.2) }):Play() end)
-		btn.MouseLeave:Connect(function() TweenService:Create(btn, TweenInfo.new(0.2), { BackgroundColor3 = color }):Play() end)
-		btn.Parent = frame
-		return btn
-	end
-
-	local reroll = createButton("☀️ roll Mutation ☀️", 45, Color3.fromRGB(100, 100, 100))
-	local toggle = createButton("☀️ Turn on/off ☀️", 90, Color3.fromRGB(120, 120, 120))
-
-	local credit = Instance.new("TextLabel", frame)
-	credit.Size = UDim2.new(1, 0, 0, 20)
-	credit.Position = UDim2.new(0, 0, 1, -20)
-	credit.Text = "Made by Jaradd"
-	credit.TextColor3 = Color3.fromRGB(180, 180, 180)
-	credit.BackgroundTransparency = 1
-	credit.Font = Enum.Font.Gotham
-	credit.TextSize = 13
-
-	local espGui -- Declare here to be accessed by cleanup
-	
-	local function findMachine()
-		for _, obj in pairs(Workspace:GetDescendants()) do
-			if obj:IsA("Model") and obj.Name:lower():find("mutation") then
-				return obj
-			end
-		end
-		return nil
-	end
-
-	local machine = findMachine()
-	if machine and machine:FindFirstChildWhichIsA("BasePart") then
-		local basePart = machine:FindFirstChildWhichIsA("BasePart")
-		local mutations = { "Shiny", "Inverted", "Frozen", "Windy", "Golden", "Mega", "Tiny", "Tranquil", "IronSkin", "Radiant", "Rainbow", "Shocked", "Ascended" }
-		local currentMutation = mutations[math.random(#mutations)]
-
-		espGui = Instance.new("BillboardGui", basePart)
-		espGui.Name = "MutationESP"
-		espGui.Adornee = basePart
-		espGui.Size = UDim2.new(0, 200, 0, 40)
-		espGui.StudsOffset = Vector3.new(0, 3, 0)
-		espGui.AlwaysOnTop = true
-
-		local espLabel = Instance.new("TextLabel", espGui)
-		espLabel.Size = UDim2.new(1, 0, 1, 0)
-		espLabel.BackgroundTransparency = 1
-		espLabel.Font = Enum.Font.GothamBold
-		espLabel.TextSize = 24
-		espLabel.TextStrokeTransparency = 0.3
-		espLabel.TextStrokeColor3 = Color3.fromRGB(40, 40, 40)
-		espLabel.Text = currentMutation
-		espLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
-		
-		toggle.MouseButton1Click:Connect(function() espGui.Enabled = not espGui.Enabled end)
-
-		reroll.MouseButton1Click:Connect(function()
-			reroll.Text = "⏳ Rerolling..."
-			task.spawn(function()
-				local duration, interval = 2, 0.1
-				for i = 1, math.floor(duration / interval) do
-					espLabel.Text = mutations[math.random(#mutations)]
-					task.wait(interval)
-				end
-				currentMutation = mutations[math.random(#mutations)]
-				espLabel.Text = currentMutation
-				reroll.Text = "🎲 Mutation Reroll"
-			end)
-		end)
-	else
-		warn("Pet Mutation Machine not found. ESP functionality disabled.")
-		reroll.Text = "Machine Not Found"
-		toggle.Text = "ESP Disabled"
-	end
-
-	gui.Destroying:Connect(function()
-		if espGui then
-			espGui:Destroy()
-		end
-	end)
-
-	return gui
-end
-
-
--- =================================================================--
--- == MAIN LIBRARY HUB                                            ==--
--- =================================================================--
--- This is the main controller that creates the buttons and toggles scripts.
-local function createLibraryHub()
-	local libraryGui = Instance.new("ScreenGui")
-	libraryGui.Name = "Jarradd_LibraryHub"
-	libraryGui.ResetOnSpawn = false
-	libraryGui.Parent = playerGui
-
-	local mainFrame = Instance.new("Frame", libraryGui)
-	mainFrame.Name = "MainFrame"
-	mainFrame.Size = UDim2.new(0, 250, 0, 150)
-	mainFrame.Position = UDim2.new(0.5, -125, 0.5, -75)
-	mainFrame.BackgroundColor3 = Color3.fromRGB(30, 32, 48)
-	mainFrame.BorderColor3 = Color3.fromRGB(120, 120, 255)
-	mainFrame.BorderSizePixel = 2
-	mainFrame.Active = true
-	mainFrame.Draggable = true
-	mainFrame.Visible = false
-	Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 8)
-
-	local title = Instance.new("TextLabel", mainFrame)
-	title.Text = "Script Library"
-	title.Font = Enum.Font.FredokaOne
-	title.TextSize = 20
-	title.TextColor3 = Color3.new(1, 1, 1)
-	title.BackgroundTransparency = 1
-	title.Size = UDim2.new(1, 0, 0, 40)
-
-	local function toggleScript(scriptKey, createFunction, button)
-		if activeGuis[scriptKey] then
-			activeGuis[scriptKey]:Destroy()
-			activeGuis[scriptKey] = nil
-			button.Text = button.Name .. " [OFF]"
-		else
-			activeGuis[scriptKey] = createFunction()
-			activeGuis[scriptKey].Parent = playerGui
-			button.Text = button.Name .. " [ON]"
-		end
-	end
-
-	local button1 = Instance.new("TextButton", mainFrame)
-	button1.Name = "Age Changer"
-	button1.Text = "Age Changer [OFF]"
-	button1.Font = Enum.Font.GothamSemibold
-	button1.TextSize = 16
-	button1.TextColor3 = Color3.new(1, 1, 1)
-	button1.BackgroundColor3 = Color3.fromRGB(80, 80, 160)
-	button1.Size = UDim2.new(0.9, 0, 0, 40)
-	button1.Position = UDim2.new(0.05, 0, 0, 45)
-	Instance.new("UICorner", button1).CornerRadius = UDim.new(0, 6)
-	button1.MouseButton1Click:Connect(function()
-		toggleScript("ageChanger", createAgeChangerGui, button1)
-	end)
-
-	local button2 = Instance.new("TextButton", mainFrame)
-	button2.Name = "Mutation Finder"
-	button2.Text = "Mutation Finder [OFF]"
-	button2.Font = Enum.Font.GothamSemibold
-	button2.TextSize = 16
-	button2.TextColor3 = Color3.new(1, 1, 1)
-	button2.BackgroundColor3 = Color3.fromRGB(80, 80, 160)
-	button2.Size = UDim2.new(0.9, 0, 0, 40)
-	button2.Position = UDim2.new(0.05, 0, 0, 95)
-	Instance.new("UICorner", button2).CornerRadius = UDim.new(0, 6)
-	button2.MouseButton1Click:Connect(function()
-		toggleScript("mutationFinder", createPetMutationFinderGui, button2)
-	end)
-
-	local openButton = Instance.new("TextButton", libraryGui)
-	openButton.Name = "OpenLibraryButton"
-	openButton.Text = "Open Library"
-	openButton.Font = Enum.Font.FredokaOne
-	openButton.TextSize = 18
-	openButton.Position = UDim2.new(1, -160, 1, -50)
-	openButton.Size = UDim2.new(0, 150, 0, 40)
-	openButton.BackgroundColor3 = Color3.fromRGB(120, 120, 255)
-	openButton.TextColor3 = Color3.new(1, 1, 1)
-	Instance.new("UICorner", openButton).CornerRadius = UDim.new(0, 8)
-
-	openButton.MouseButton1Click:Connect(function()
-		mainFrame.Visible = not mainFrame.Visible
-	end)
-end
-
--- Create the library hub when the player's GUI is ready.
-createLibraryHub()
